@@ -7,13 +7,11 @@ from data_fetcher import get_stock_info, get_historical_data, get_market_data, g
 from database import init_db, add_transaction, get_portfolio_summary, get_cash_balance, get_net_deposits, get_all_transactions, delete_transaction, reset_database
 from analytics import build_portfolio_history
 
-# Initialize database on startup
 init_db()
 
-# --- UI Setup ---
 st.set_page_config(page_title="Portfolio Dashboard", layout="wide", initial_sidebar_state="expanded")
 
-# --- Custom CSS for Premium Look ---
+# custom css for tab styling
 st.markdown("""
 <style>
     div[data-testid="metric-container"] {
@@ -77,7 +75,7 @@ st.markdown("""
 if 'ticker_search_input' not in st.session_state:
     st.session_state['ticker_search_input'] = ""
 
-# Handle Market Explorer selection BEFORE sidebar renders to avoid st.rerun() tab resets
+# handle market explorer selection before sidebar renders to avoid rerun tab resets
 if 'explorer_table' in st.session_state and getattr(st.session_state.explorer_table, 'selection', None):
     rows = getattr(st.session_state.explorer_table.selection, 'rows', [])
     if rows:
@@ -90,22 +88,18 @@ if 'explorer_table' in st.session_state and getattr(st.session_state.explorer_ta
 
 st.title("Stock Portfolio Dashboard")
 
-# ==========================================
-# SIDEBAR (Part 1): Inputs
-# ==========================================
+# sidebar inputs
 with st.sidebar:
     st.header("Control Center")
     st.subheader("Market Research")
     ticker_input = st.text_input("Enter Stock Ticker:", key="ticker_search_input").upper()
 
-# ==========================================
-# MAIN CONTENT: Portfolio Data
-# ==========================================
+# main content
 portfolio_df = get_portfolio_summary()
 cash_balance = get_cash_balance()
 net_deposits = get_net_deposits()
 
-# 1. Fetch live prices & calculate metrics
+# fetch live prices
 if not portfolio_df.empty:
     tickers = portfolio_df['ticker'].tolist()
     with st.spinner("Updating market data and Forex rates..."):
@@ -118,7 +112,7 @@ if not portfolio_df.empty:
     portfolio_df['exchange_rate'] = portfolio_df['ticker'].map(lambda x: market_data.get(x, {}).get('exchange_rate', 1.0))
     portfolio_df['dividendYield'] = portfolio_df['ticker'].map(lambda x: market_data.get(x, {}).get('dividendYield', 0.0))
     
-    # Forex normalization to USD
+    # forex normalization to usd
     portfolio_df['native_current_value'] = portfolio_df['total_shares'] * portfolio_df['live_price']
     portfolio_df['current_value'] = portfolio_df['native_current_value'] * portfolio_df['exchange_rate']
     
@@ -145,7 +139,7 @@ else:
 
 total_portfolio_value = stock_value + cash_balance
 
-# 2. Top-Level Metric Banner
+# top level metric banner
 st.subheader("Executive Summary")
 col1, col2, col3, col4, col5, col6 = st.columns(6)
 
@@ -203,7 +197,7 @@ col6.metric("Annual Dividend Income", f"${total_expected_dividend:,.2f}", div_st
 
 st.divider()
 
-# 3. Robust Navigation (Replacing buggy st.tabs)
+# main navigation
 tab_options = ["🚀 Overview", "📊 Holdings", "📈 Analytics", "🌍 Market Explorer", "🔍 Market Chart", "📜 History", "💵 Cash Hub", "⚙️ Settings"]
 current_tab = st.radio("Navigation", tab_options, horizontal=True, label_visibility="collapsed")
 
@@ -425,9 +419,7 @@ elif current_tab == "⚙️ Settings":
         st.success("Database wiped.")
         st.rerun()
 
-# ==========================================
-# SIDEBAR (Part 2): Dynamic Stock Card & Terminal
-# ==========================================
+# dynamic stock card & terminal
 with st.sidebar:
     stock_data = {}
     if ticker_input:

@@ -35,16 +35,15 @@ def add_transaction(ticker: str, action: str, price: float, quantity: int, times
     conn.commit()
     conn.close()
 
-# MAKE SURE THIS FUNCTION EXISTS AND IS SAVED:
 def get_portfolio_summary() -> pd.DataFrame:
     conn = sqlite3.connect(DB_NAME)
-    # Fetch all trade transactions ordered chronologically
+    # fetch all trade transactions
     df_tx = pd.read_sql_query("SELECT * FROM transactions WHERE action IN ('BUY', 'SELL') ORDER BY timestamp ASC, id ASC", conn)
     conn.close()
     
     portfolio = []
     
-    # Calculate holdings using a chronological Weighted Average Cost approach
+    # calculate holdings
     for ticker, group in df_tx.groupby('ticker'):
         total_shares = 0
         total_cost = 0.0
@@ -56,24 +55,21 @@ def get_portfolio_summary() -> pd.DataFrame:
                 total_cost += row['price'] * row['quantity']
             elif row['action'] == 'SELL':
                 if total_shares > 0:
-                    # Calculate current avg price before selling
+                    # calculate avg price
                     avg_price = total_cost / total_shares
                     
-                    # Calculate realized P/L for the shares actually sold
+                    # calculate realized pnl
                     shares_sold = min(row['quantity'], total_shares)
                     realized_pl += (row['price'] - avg_price) * shares_sold
                     
-                    # Remove the sold shares
                     total_shares -= shares_sold
-                    # Reduce cost basis proportionally
                     total_cost -= shares_sold * avg_price
                 
-                # If we sold everything, completely reset the cost basis to avoid dragging old prices
                 if total_shares <= 0:
                     total_shares = 0
                     total_cost = 0.0
                     
-        # Include tickers that are currently held OR have a realized P/L history
+        # include active or historically traded
         if total_shares > 0 or realized_pl != 0.0:
             portfolio.append({
                 'ticker': ticker,
@@ -140,7 +136,6 @@ def reset_database():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM transactions")
-    # Also reset the auto-increment counter to avoid massive IDs
     cursor.execute("DELETE FROM sqlite_sequence WHERE name='transactions'")
     conn.commit()
     conn.close()

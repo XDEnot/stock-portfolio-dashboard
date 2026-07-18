@@ -15,7 +15,6 @@ def get_stock_info(ticker_symbol: str) -> Dict[str, Any]:
     except Exception as e:
         return {"error": str(e)}
 
-# --- NEW FUNCTION ---
 @st.cache_data(ttl=3600)
 def get_historical_data(ticker_symbol: str, period: str = "6mo") -> pd.DataFrame:
     """
@@ -24,11 +23,9 @@ def get_historical_data(ticker_symbol: str, period: str = "6mo") -> pd.DataFrame
     """
     try:
         ticker = yf.Ticker(ticker_symbol)
-        # The .history() method automatically returns a Pandas DataFrame
         hist = ticker.history(period=period)
         return hist
     except Exception:
-        # If it fails, return an empty DataFrame so our app doesn't crash
         return pd.DataFrame()
     
 def get_market_data(tickers: list) -> dict:
@@ -40,7 +37,7 @@ def get_market_data(tickers: list) -> dict:
     for ticker in tickers:
         info = get_stock_info(ticker)
         
-        # Robust fallback for yfinance missing data
+        # fallback if currentPrice is missing
         price = info.get('currentPrice')
         if not price:
             price = info.get('regularMarketPrice')
