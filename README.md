@@ -1,7 +1,5 @@
 # Stock Portfolio Dashboard
 
-**Live Demo:** [https://stock-portfolio-dashboard-w.streamlit.app](https://stock-portfolio-dashboard-w.streamlit.app)
-
 A real-time stock portfolio tracking application built with Python and Streamlit. This application allows users to monitor their investments, fetch live market data, and analyze their asset allocation.
 
 ## Key Features
